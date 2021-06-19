@@ -7,6 +7,11 @@
  * tek465b.github.io
  */
 
+#define lIntensity //When defined it let you change the display brightness using the modwheel on midi channel 16, remove or comment to disable and have the display at 100% intensity.
+
+#ifdef lIntensity
+#include <EEPROM.h>
+#endif
 
 #define clockPin 5
 #define dataPin 2
@@ -21,6 +26,7 @@
 byte midi = 0;
 byte ccount = 0;
 byte current_digit;
+byte blIntensity;
 unsigned long mymicros;
 unsigned long previousmicros = 0;
 unsigned long bpm = 0;
@@ -37,7 +43,9 @@ void setup() {
   pinMode(clockPin, OUTPUT);
   pinMode(dataPin, OUTPUT);
   pinMode(latch, OUTPUT);
+  #ifndef lIntensity
   pinMode(OEPin, OUTPUT);
+  #endif
   pinMode(MRPin, OUTPUT);
   pinMode(13, OUTPUT);
   pinMode(9, INPUT_PULLUP); //Set unused IO as input pullup
@@ -54,7 +62,12 @@ void setup() {
   
 
 
+  #ifdef lIntensity //Read brightness from eeprom and set the display to this value.
+  blIntensity = EEPROM.read(0);
+  analogWrite(OEPin, blIntensity);
+  #else
   digitalWrite(OEPin, LOW);
+  #endif
   digitalWrite(MRPin, HIGH);
 
   digit_off();
@@ -148,6 +161,18 @@ void CheckMidi(){
       digitalWrite(13, LOW);
     }
     }
+    #ifdef lIntensity //Check for midi ch16 CC byte 10111111, 0xBF or 191 in decimal. wait to receive 2 byte.
+    else if (midi == 0xBF) {
+      while(Serial.available() < 2){};
+      midi = Serial.read();
+      if(midi == 0x01) { //check for the modwheel byte 01, 0x01, If yes then get the modwheel value and set the brightness accordingly and save to eeprom.
+        midi = Serial.read();
+        blIntensity = 254 - (midi << 1);
+        analogWrite(OEPin, blIntensity);
+        EEPROM.update(0, blIntensity);
+      }
+    }
+    #endif
   }
 }
 
