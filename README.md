@@ -1,5 +1,5 @@
 # MIDIBPMDisp
-MIDI and USB BPM display using arduino.
+MIDI BPM display using arduino.
 
 Website page: <a href='https://tek465b.github.io/Page5.html'>See my own webpage about this product.</a>
 
