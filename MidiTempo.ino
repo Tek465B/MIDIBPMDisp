@@ -1,5 +1,5 @@
 /*
- * Midi/USB BPM display
+ * Midi BPM display
  * Use 7 segment LED display common Anode with 2N3906 PNP transistors and 74HC595 shift register.
  * H11L1 opto-coupler and 74HC14 inverter.
  * 
@@ -64,6 +64,7 @@ void setup() {
 
   #ifdef lIntensity //Read brightness from eeprom and set the display to this value.
   blIntensity = EEPROM.read(0);
+  TCCR2B = TCCR2B & B11111000 | B00000001; //timer 2 PWM frequency to avoid aliasing.
   analogWrite(OEPin, blIntensity);
   #else
   digitalWrite(OEPin, LOW);
@@ -150,7 +151,7 @@ void loop() {
 void CheckMidi(){
   if (Serial.available() > 0 ){
     midi = Serial.read();
-    if (midi == 0xF8) { //If serial data is available read it and check for the midi clock byte 0xF8 or 248 in decimal, char alt+0248 = ø on serial using windows 1252 charset.
+    if (midi == 0xF8) { //If serial data is available read it and check for the midi clock byte 0xF8 or 248 in decimal, char alt+0248 = ø on serial using windows 1252 charset to test.
       ccount += 1;
     if (ccount == 24) { //once we get 24 clock per quarter note we get the time in microS and convert to bpm.
       digitalWrite(13, HIGH);
